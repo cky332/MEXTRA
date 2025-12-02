@@ -25,7 +25,7 @@ You can run the following files in sequence to conduct MEXTRA on EHRAgent.
 You can run the following files in sequence to conduct MEXTRA on RAP (webshop).
 - _RAP/webshop/main.py_
   
-  Initialize your memory. After you get the momory, set "Success" to 'true' and "Reward" to 1.0 for efficiency. (Optional, you can directly use our provided memory.)
+  Initialize your memory. After you get the memory, set "Success" to 'true' and "Reward" to 1.0 for efficiency. (Optional, you can directly use our provided memory.)
 
 - _RAP/attacking/attacking_prompt_generation.py_
   
