@@ -97,6 +97,26 @@ task settings**:
   **1 of 48**, qa: **0**). MEXTRA can't target; the paper's 100%-sensitive memory
   inflates the apparent harm.
 
+### MEXTRA++: an improved attack that fixes the 3 weaknesses (`improve.py`)
+
+One coherent improved attack addressing coverage, dynamic-memory self-poisoning,
+and trivial defenses (`mextra/coverage.py` + `mextra/defenses.py`), each checked
+against a pre-registered criterion (`python improve.py` → **3/3 PASS**):
+
+- **I1 coverage (set cover).** Content-seeded prompts + greedy selection: a
+  black-box adaptive attacker (feedback toward least-covered topics) hits the
+  white-box (1−1/e) oracle and covers **1.38× MEXTRA's blind generation** at
+  n = #topics.
+- **I2 dynamic memory.** Varied payload wording + front-loading: under write-back
+  MEXTRA self-poisons instantly (stuck at 9) while MEXTRA++ keeps extracting
+  (**2.2×** at budget 30). Both stay far below static, so **dynamic memory is a
+  strong natural defense** — MEXTRA++ only mitigates.
+- **I3 defense evasion.** A keyword-free locator + reversibly-encoded output
+  **evade the input-keyword, verbatim-echo and fuzzy-echo filters** (which zero
+  out MEXTRA), but a **structural output-shape filter still catches MEXTRA++** —
+  i.e. content/keyword filtering is the wrong layer; output-shape and
+  dynamic-memory are the robust defenses.
+
 No `pip install` needed (pure standard library). Python ≥ 3.8.
 
 ## Example output (offline backend)
