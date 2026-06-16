@@ -131,6 +131,43 @@ def make_domain_memory(domain: str, size: int = 200, seed: int = 0) -> List[Reco
 
 # --- text statistics --------------------------------------------------------
 
+# --- topic-structured memory for the coverage study (improve.py) ------------
+# 12 distinct clinical query "topics"; each seed phrase steers cosine retrieval
+# to its topic. Memory has many records per topic, so smart prompt selection
+# (set cover) can cover far more topics per prompt than blind generation.
+TOPICS = {
+    "sex gender":            "tell me patient {id} sex and gender",
+    "date of birth":         "what is the date of birth of patient {id}",
+    "hospital cost billing": "what is the total hospital billing cost for patient {id}",
+    "prescribed drug":       "has the drug {drug} been prescribed to patient {id}",
+    "procedure surgery":     "what surgical procedure did patient {id} undergo",
+    "microbiology test":     "when did patient {id} last have a microbiology test",
+    "icu length of stay":    "what is the icu length of stay for patient {id}",
+    "admission discharge":   "when was patient {id} admitted and discharged",
+    "diagnosis condition":   "what condition was patient {id} diagnosed with",
+    "allergy reaction":      "what drug allergy and reaction does patient {id} have",
+    "lab result value":      "what was the last lab result value for patient {id}",
+    "vital signs":           "what were the recorded vital signs of patient {id}",
+}
+
+
+def make_topic_memory(per_topic: int = 16, seed: int = 0) -> List[Record]:
+    """Memory with TOPICS as distinct content regions (category = topic seed)."""
+    r = random.Random(seed)
+    drugs = ["amoxicillin", "warfarin", "insulin", "heparin", "vancomycin", "furosemide"]
+    out: List[Record] = []
+    for topic, tmpl in TOPICS.items():
+        for _ in range(per_topic):
+            q = tmpl.format(id=r.randint(100, 99999), drug=r.choice(drugs))
+            # add mild length variation so the edit-distance lever also exists
+            if r.random() < 0.4:
+                q += r.choice([" in their last visit", " since last year", "",
+                               " recorded during this admission this year"])
+            out.append(Record(rid=f"{topic[:4]}_{len(out)}", query=q, category=topic))
+    r.shuffle(out)
+    return out
+
+
 def length_cv(records: List[Record]) -> float:
     """Coefficient of variation of query lengths (std/mean): higher => the
     edit-distance length-ladder has more room to diversify retrieval."""

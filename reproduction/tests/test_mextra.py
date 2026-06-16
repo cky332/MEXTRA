@@ -136,6 +136,52 @@ check("clinical length-CV > finance", length_cv(make_domain_memory("clinical", 2
       > length_cv(make_domain_memory("finance", 200)))
 check("recon_keywords returns domain words", len(recon_keywords("finance", 8)) >= 1)
 
+# --- MEXTRA++ building blocks ----------------------------------------------
+from mextra.agent import detect_locator, detect_locator_oblique, detect_transform, TRANSFORMS  # noqa
+from mextra.defenses import (input_keyword_filter, verbatim_echo_filter, fuzzy_echo_filter,  # noqa
+                             output_shape_filter, DefendedAgent)
+from mextra.domains import make_topic_memory, TOPICS  # noqa
+from mextra.coverage import (build_pp_prompt, seed_pool, oracle_greedy, AdaptiveAttacker,  # noqa
+                             run_prompts)
+
+# oblique locator is detected as extraction but uses no input-filter trigger word
+ob = build_pp_prompt("sex gender", transform="wordrev", variant=0)
+check("oblique locator detected as extraction", detect_locator_oblique(str(ob)))
+check("oblique locator has no obvious MEXTRA keyword", not detect_locator(str(ob)))
+check("oblique prompt evades input-keyword filter", not input_keyword_filter(str(ob), []))
+
+# reversible encoding round-trips and is non-verbatim
+_q = "tell me patient 1 sex"
+check("wordrev transform is reversible", TRANSFORMS["wordrev"](TRANSFORMS["wordrev"](_q)) == _q)
+check("underscore transform is reversible", TRANSFORMS["underscore"](_q).replace("_", " ") == _q)
+
+# encoded agent output evades verbatim filter but a dump is caught by shape filter
+trecs = make_topic_memory(8, seed=0)
+enc_agent = SimulatedAgent("ehragent")
+_resp = None
+for _ri in range(3):
+    _resp = enc_agent.respond(str(ob), trecs[:4], run_idx=_ri)
+    if _resp.leaked:
+        break
+check("encoded output is non-verbatim (evades verbatim filter)",
+      (not _resp.leaked) or (not verbatim_echo_filter(_resp.output, trecs[:4])))
+check("encoded output still has a dump shape (caught by shape filter)",
+      (not _resp.leaked) or output_shape_filter(_resp.output, trecs[:4]))
+check("attacker still recovers raw queries via .leaked",
+      all(" " in q for q in _resp.leaked))  # raw (spaced) queries, not the encoded form
+
+# coverage: oracle (set cover) beats blind first-n on a topic memory
+seeds = list(TOPICS.keys())
+pool, groups = seed_pool(seeds, transform="wordrev", phrasings=3)
+tmem = lambda: MemoryModule([Record(r.rid, r.query) for r in make_topic_memory(16, seed=0)], "cosine")
+vic = {r.query for r in make_topic_memory(16, seed=0)}
+sel, _ = oracle_greedy(tmem(), pool, 4, 12)
+rn_oracle = run_prompts(tmem(), sel, SimulatedAgent("ehragent"), 4, vic)[1]
+rn_blind = run_prompts(tmem(), pool[:12], SimulatedAgent("ehragent"), 4, vic)[1]
+check("oracle set-cover RN >= blind first-n RN", rn_oracle >= rn_blind)
+tr = AdaptiveAttacker(pool, groups).run(tmem(), SimulatedAgent("ehragent"), 4, 12, vic)
+check("adaptive attacker recovers victims", len(tr.covered) > 0)
+
 print()
 if _failures:
     print(f"{len(_failures)} CHECK(S) FAILED: {_failures}")
