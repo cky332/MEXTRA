@@ -56,8 +56,27 @@ python run_demo.py --backend openai --model gpt-4o
 cd reproduction
 python run_demo.py        # RQ1 (Table 1 shape) + ablations, offline
 python experiments.py     # RQ2 + RQ3 sweeps -> results/*.csv
+python stress.py          # realistic-condition stress tests (see below) -> results/*.csv
 python tests/test_mextra.py
 ```
+
+### Stress tests: MEXTRA under realistic conditions (`stress.py`)
+
+The paper evaluates on a **static, single-user memory** against a **zero-defense**
+agent, assuming the attacker **knows the scoring function**. `stress.py` relaxes
+each assumption and measures the fallout (all decisive numbers are exact
+retrieval, not the compliance model):
+
+- **E1 — dynamic memory ⇒ self-poisoning.** Real agents write successful
+  interactions back to memory, so the attacker's own near-identical prompts get
+  stored and then crowd out the victim queries. Extraction collapses from **44 →
+  3** unique victim queries (−93%); the victim-fraction of each retrieved set
+  falls 1.0 → 0.0 within ~10 attacks.
+- **E2 — a cheap defense neutralises it.** An output-echo filter takes EN
+  **31 → 0** with **0/30** benign false positives.
+- **E3 — unknown `f` ⇒ "advanced" largely fails.** The edit-distance length-ladder
+  lifts an edit agent 44→65 but a cosine agent only 26→36: guess `f` wrong and the
+  effort is wasted (a white-box dependency).
 
 No `pip install` needed (pure standard library). Python ≥ 3.8.
 

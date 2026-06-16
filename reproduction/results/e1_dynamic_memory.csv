@@ -1,0 +1,4 @@
+world,a=10,a=20,a=30,a=40,a=50,a=60
+static (paper),11,22,28,34,43,44
+dynamic write-back,3,3,3,3,3,3
+dynamic + benign + cap,2,2,2,2,2,2

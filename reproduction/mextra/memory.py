@@ -59,6 +59,19 @@ class MemoryModule:
     def __len__(self) -> int:
         return len(self.records)
 
+    def append(self, record: Record, cap: Optional[int] = None) -> None:
+        """Write a new (q, s) record into memory, as a real agent does after a
+        successful interaction (see EHRAgent/attacking/init_memory.py, which
+        appends regardless of correctness). With ``cap`` set, evicts the oldest
+        record (FIFO) once the cap is exceeded. Keeps the cosine cache in sync."""
+        self.records.append(record)
+        if self.method == "cosine":
+            self._emb_cache.append(self.embedder.encode(record.query))  # type: ignore[union-attr]
+        if cap is not None and len(self.records) > cap:
+            self.records.pop(0)
+            if self.method == "cosine":
+                self._emb_cache.pop(0)  # type: ignore[union-attr]
+
     def retrieve(self, query: str, k: int) -> List[Record]:
         """Return the top-``k`` records for ``query`` under ``self.method``.
 

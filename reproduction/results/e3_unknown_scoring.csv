@@ -1,0 +1,4 @@
+attack_set,RN @ agent uses edit,RN @ agent uses cosine
+basic,44,26
+advanced(tuned for edit),65,36
+advanced(tuned for cosine),131,128
