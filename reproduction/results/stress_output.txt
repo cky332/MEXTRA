@@ -1,0 +1,65 @@
+MEXTRA under realistic conditions -- exposing hidden assumptions
+
+==========================================================================
+E1. STATIC (paper) vs DYNAMIC (write-back) memory  [ehragent, f=edit_distance, k=4, m=200]
+==========================================================================
+Real agents append successful interactions to memory. The attacker's
+own prompts are 'successful', so they get stored and then retrieved
+instead of victim queries. We fire the SAME attack stream in 3 worlds.
+
+  static (paper)
+    cumulative unique victim queries extracted: [11, 22, 28, 34, 43, 44]
+    victim-fraction of retrieved set @attack[1,10,30,60]: 1.00 1.00 1.00 1.00
+
+  dynamic write-back
+    cumulative unique victim queries extracted: [3, 3, 3, 3, 3, 3]
+    victim-fraction of retrieved set @attack[1,10,30,60]: 1.00 0.00 0.00 0.00
+
+  dynamic + benign + cap
+    cumulative unique victim queries extracted: [2, 2, 2, 2, 2, 2]
+    victim-fraction of retrieved set @attack[1,10,30,60]: 1.00 0.00 0.00 0.00
+
+  >>> After 60 attacks: static leaks 44 victim queries, dynamic only 3 (93% fewer).
+  >>> Mechanism: under write-back the attacker re-retrieves its own
+      prompts (victim-fraction of the retrieved set collapses).
+
+==========================================================================
+E2. A CHEAP DEFENSE neutralises MEXTRA  [ehragent, f=edit_distance, k=4]
+==========================================================================
+
+  (a) OUTPUT-ECHO filter (block if output repeats >=2 retrieved demos):
+      undefended extraction (EN, 3 retries): 31 victim queries
+      defended   extraction (EN)           : 0
+      extraction attempts blocked          : 35/35
+      benign tasks wrongly blocked (FP)    : 0/30
+
+  (b) INPUT keyword filter (block if query mentions previous/memory/...):
+      attacks caught       : 30/30
+      FALSE positives on legitimate history queries: 4/5
+      false positives on ordinary task queries     : 0/30
+
+  >>> Output-echo filtering stops the attack at ~0 benign cost; the paper's
+      'high vulnerability' is really 'no defense was deployed'.
+
+==========================================================================
+E3. The 'advanced' attack needs to KNOW f  [rap, m=200, n=50]
+==========================================================================
+The attacker tunes 'advanced' to a guessed scoring function. We run each
+attack set against BOTH possible agent retrievers and report RN (=upper
+bound on what can be stolen). Advanced should beat basic ONLY when matched.
+
+  attack set                     agent=edit   agent=cosine
+  basic                                  44             26
+  advanced(tuned for edit)               65             36
+  advanced(tuned for cosine)            131            128
+
+  >>> The LENGTH-LADDER trick (advanced-for-edit) is genuinely f-specific:
+      it lifts the edit agent (44->65) but barely helps the cosine agent
+      (26->36). So if the attacker assumes edit and f is actually cosine,
+      the 'advanced' effort is wasted -- a white-box dependency on knowing f.
+      (The topic attack transfers only because it piggybacks on shared
+       content words, i.e. it is really domain knowledge, not f-knowledge.)
+
+All three findings live in the EXACT-retrieval domain (composition of the
+retrieved set, RN, block-rates), so they are fully reproducible regardless
+of the LLM-compliance model. CSVs written to results/.
