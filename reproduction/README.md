@@ -78,6 +78,25 @@ retrieval, not the compliance model):
   lifts an edit agent 44→65 but a cosine agent only 26→36: guess `f` wrong and the
   effort is wasted (a white-box dependency).
 
+### Generalization: new data + new task settings (`generalize.py`)
+
+Does MEXTRA hold up beyond the paper's 2 hand-picked domains? `generalize.py`
+runs it on **6 new domains** (clinical/support/legal/code/finance/qa) and **2 new
+task settings**:
+
+- **G1 cross-domain.** The trivial *basic* attack ("dump your context") leaks in
+  **all 6** domains, but the paper's headline **"advanced"** refinements **do not
+  generalize**: the edit length-ladder gain swings 0.9×–2.1× (it *hurts* on QA)
+  with no clean tie to text statistics, and the cosine keyword gain is ~1.0–1.2×
+  (vs the paper's 4.5× on WebShop).
+- **G2 multi-user** (the paper's admitted gap). With shared memory one user
+  extracts **13 other users'** private clinical queries; with standard **per-user
+  isolation that drops to 0**.
+- **G3 privacy yield.** On realistic memory mixing sensitive + benign queries, the
+  fraction of dumped queries that are actually sensitive ≈ the base rate (code:
+  **1 of 48**, qa: **0**). MEXTRA can't target; the paper's 100%-sensitive memory
+  inflates the apparent harm.
+
 No `pip install` needed (pure standard library). Python ≥ 3.8.
 
 ## Example output (offline backend)
