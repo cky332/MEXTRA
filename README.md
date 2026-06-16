@@ -21,6 +21,19 @@ You can run the following files in sequence to conduct MEXTRA on EHRAgent.
   
   Evaluation.
 
+## 🔬 Clean reproduction + critical notes
+
+The original code above is research-grade and not runnable as-is (hard-coded
+paths, placeholder keys, needs MIMIC-III + a live WebShop server + GPT-4o).
+A from-scratch, **dependency-free, one-command** reproduction of the whole
+MEXTRA method — plus a code-grounded review of its strengths and weaknesses —
+was added:
+
+- [`reproduction/`](reproduction/) — pure-Python re-implementation (retrieval,
+  attack-prompt design, automated generation, EN/RN/EE/CER/AER metrics). Runs
+  offline in seconds: `cd reproduction && python run_demo.py`.
+- [`笔记_MEXTRA.md`](笔记_MEXTRA.md) — 论文复现笔记，含从代码出发的核心优缺点分析.
+
 ## 3. Attacking on RAP
 You can run the following files in sequence to conduct MEXTRA on RAP (webshop).
 - _RAP/webshop/main.py_

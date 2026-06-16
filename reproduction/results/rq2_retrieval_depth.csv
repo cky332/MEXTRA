@@ -1,0 +1,5 @@
+agent,metric,k=1,k=2,k=3,k=4,k=5
+ehragent,EN,8,16,23,31,38
+ehragent,RN,9,17,24,33,40
+rap,EN,12,15,23,28,32
+rap,RN,12,17,24,31,35
