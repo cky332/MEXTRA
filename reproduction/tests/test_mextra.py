@@ -122,6 +122,20 @@ atk_out = "answer = [" + ", ".join(f'"{r.query}"' for r in retr) + "]"
 check("echo filter blocks attack output", stress._output_echo_blocked(atk_out, retr) is True)
 check("echo filter passes benign output", stress._output_echo_blocked("answer = 42", retr) is False)
 
+# --- generalization building blocks ----------------------------------------
+from mextra.domains import (GENERATORS, length_cv, make_domain_memory,  # noqa: E402
+                            recon_keywords, topical_diversity)
+for _dom in GENERATORS:
+    _recs = make_domain_memory(_dom, 100, seed=0)
+    check(f"domain '{_dom}' -> 100 unique records", len(_recs) == 100 and len({r.query for r in _recs}) == 100)
+# finance has lower topical diversity than qa; qa has many subjects
+check("finance topical diversity < qa", topical_diversity(make_domain_memory("finance", 200))
+      < topical_diversity(make_domain_memory("qa", 200)))
+# clinical has higher length variation than finance
+check("clinical length-CV > finance", length_cv(make_domain_memory("clinical", 200))
+      > length_cv(make_domain_memory("finance", 200)))
+check("recon_keywords returns domain words", len(recon_keywords("finance", 8)) >= 1)
+
 print()
 if _failures:
     print(f"{len(_failures)} CHECK(S) FAILED: {_failures}")
