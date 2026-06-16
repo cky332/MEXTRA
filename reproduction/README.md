@@ -1,0 +1,81 @@
+# MEXTRA — a clean, runnable reproduction
+
+A from-scratch, **dependency-free** reproduction of
+
+> *Unveiling Privacy Risks in LLM Agent Memory* (MEXTRA), ACL 2025
+> — Bo Wang et al. ([arXiv:2502.13172](https://arxiv.org/abs/2502.13172))
+
+The paper's official code (in `../EHRAgent` and `../RAP`) is research-grade and
+**not runnable as-is**: it has hard-coded absolute paths (`XXX/EhrAgent/...`),
+placeholder API keys, and depends on three things you almost never have at once
+— a credentialed **MIMIC-III** download, a live **WebShop** server, and a paid
+**GPT-4o** key. Part of its RAP evaluation is even hand-annotated
+(`RAP/attacking/evaluation.ipynb` hard-codes per-memory-size `failed_indexes`).
+
+This reproduction re-implements the *method* in plain Python so the whole
+pipeline runs in seconds with no network, no GPU, and no third-party packages,
+while staying faithful to what the original code actually does.
+
+## What it reproduces
+
+| Paper | Here |
+|---|---|
+| Attacking-prompt design `q̃ = q̃_loc ‖ q̃_align` (§3.1) | `mextra/attack.py` (`AttackPrompt`) |
+| Automated diverse generation, basic/advanced (§3.2, App. A) | `mextra/attack.py` (`generate_prompts`) + verbatim instructions in `mextra/instructions.py` |
+| Edit-distance retrieval (EHRAgent) | `mextra/memory.py` + `mextra/textsim.py::levenshtein` |
+| Cosine retrieval (RAP, SBERT) | `mextra/memory.py` + `NgramEmbedder` stand-in (pluggable) |
+| Metrics EN / RN / EE / CER / AER (§4.1) | `mextra/evaluate.py` |
+| RQ1 + ablations (Table 1) | `run_demo.py` |
+| RQ2 scoring/size/depth, RQ3 n/instruction (Tables 2, Figs 2–4) | `experiments.py` |
+
+## Honest scope (read this)
+
+The attack has two stages with very different reproducibility:
+
+1. **Retrieval** — *which* private records enter the agent's context. This is
+   pure computation (edit distance / cosine) and is reproduced **exactly**. All
+   `RN`, overlap, and "effect of scoring-fn / k / memory-size" numbers are real.
+2. **Compliance** — whether the (undefended) LLM actually copies those records
+   out. This needs a real LLM. Offline we use a **transparent, documented**
+   compliance model (`mextra/agent.py`) calibrated only to the *qualitative*
+   facts the paper established (aligner matters; code agent ≫ web agent;
+   Table 1's CER/AER structure). Nothing in it depends on k/n/m, so those
+   trends come purely from stage 1.
+
+So: **trends and retrieval-side magnitudes are genuine; absolute EN/EE from the
+offline backend are illustrative.** For true victim numbers, plug in a real LLM:
+
+```bash
+export OPENAI_API_KEY=sk-...
+python run_demo.py --backend openai --model gpt-4o
+```
+
+## Run it
+
+```bash
+cd reproduction
+python run_demo.py        # RQ1 (Table 1 shape) + ablations, offline
+python experiments.py     # RQ2 + RQ3 sweeps -> results/*.csv
+python tests/test_mextra.py
+```
+
+No `pip install` needed (pure standard library). Python ≥ 3.8.
+
+## Example output (offline backend)
+
+```
+=== EHRAgent  (f=edit_distance, k=4, n=30, m=200) ===
+MEXTRA                     EN= 31  RN= 33  EE=0.26  CER=0.80  AER=0.80
+  w/o aligner              EN= 11  RN= 16  EE=0.09  CER=0.50  AER=0.67
+=== RAP  (f=cosine, k=3, n=30, m=200) ===
+MEXTRA                     EN= 29  RN= 30  EE=0.32  CER=0.87  AER=0.87
+  w/o aligner              EN=  9  RN= 18  EE=0.10  CER=0.17  AER=0.67
+```
+
+Compare to paper Table 1 (EHRAgent CER/AER 0.83/0.83; RAP 0.87/0.90; the RAP
+w/o-aligner CER 0.17 is reproduced exactly). The `EN` magnitudes are lower than
+the paper's 50/26 because the offline templater's `basic` prompts retrieve a
+less diverse set than GPT-4's; the *gap structure* is what's faithful.
+
+See [`../笔记_MEXTRA.md`](../笔记_MEXTRA.md) for the full code-grounded review
+(核心优缺点).

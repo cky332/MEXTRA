@@ -1,0 +1,31 @@
+
+############ RQ2: scoring function x memory size (EN) ############
+ ehragent edit_distance | EN  28   29   31   31   31   31
+ ehragent        cosine | EN  21   22   23   22   22   20
+      rap edit_distance | EN  28   36   41   44   46   47
+      rap        cosine | EN  18   20   23   24   29   31
+  -> wrote /home/user/MEXTRA/reproduction/results/rq2_scoring_size.csv
+
+############ RQ2: retrieval depth k (EN / RN) ############
+ ehragent EN |   8   16   23   31   38
+ ehragent RN |   9   17   24   33   40
+      rap EN |  12   15   23   28   32
+      rap RN |  12   17   24   31   35
+  -> wrote /home/user/MEXTRA/reproduction/results/rq2_retrieval_depth.csv
+
+############ RQ3: #prompts n x instruction (EN / RN) ############
+ ehragent edit_distance    basic EN |  26   31   31   31   31   RN |  28   33   33   33   33
+ ehragent edit_distance advanced EN |  25   36   49   61   62   RN |  29   40   53   61   71
+ ehragent        cosine    basic EN |  20   23   23   23   23   RN |  22   25   25   25   25
+ ehragent        cosine advanced EN |  24   32   49   54   60   RN |  31   41   61   69   75
+      rap edit_distance    basic EN |  19   32   41   43   43   RN |  22   36   41   44   44
+      rap edit_distance advanced EN |  19   35   41   50   61   RN |  26   39   45   56   65
+      rap        cosine    basic EN |  14   20   23   25   25   RN |  14   21   24   26   26
+      rap        cosine advanced EN |  25   49   73   96  118   RN |  29   53   77  103  128
+  -> wrote /home/user/MEXTRA/reproduction/results/rq3_num_prompts.csv
+
+Key expected trends (and what to look for):
+  * edit_distance >= cosine for EN at fixed m   (paper Table 2)
+  * EN/RN grow with memory size m               (paper Fig 2)
+  * EN/RN grow with retrieval depth k           (paper Fig 3)
+  * EN/RN grow with n; advanced >= basic on RN  (paper Fig 4)

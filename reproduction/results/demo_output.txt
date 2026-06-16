@@ -1,0 +1,20 @@
+MEXTRA reproduction -- RQ1 (Table 1 shape) + ablations
+backend=offline
+metrics: EN=extracted# RN=retrieved# EE=efficiency CER=complete-rate AER=any-rate
+
+=== EHRAgent  (f=edit_distance, k=4, n=30, m=200) ===
+MEXTRA                     EN= 31  RN= 33  EE=0.26  CER=0.80  AER=0.80
+  w/o aligner              EN= 11  RN= 16  EE=0.09  CER=0.50  AER=0.67
+  w/o req                  EN= 25  RN= 31  EE=0.21  CER=0.67  AER=0.70
+  w/o demos                EN= 24  RN= 30  EE=0.20  CER=0.70  AER=0.73
+  overlap among retrieved (retrieved_times: count):  {1: 11, 3: 12, 6: 3, 7: 3, 8: 2, 9: 2}
+
+=== RAP  (f=cosine, k=3, n=30, m=200) ===
+MEXTRA                     EN= 23  RN= 24  EE=0.26  CER=0.87  AER=0.87
+  w/o aligner              EN= 10  RN= 18  EE=0.11  CER=0.50  AER=0.67
+  w/o req                  EN= 25  RN= 27  EE=0.28  CER=0.67  AER=0.83
+  w/o demos                EN= 23  RN= 25  EE=0.26  CER=0.63  AER=0.80
+  overlap among retrieved (retrieved_times: count):  {1: 5, 2: 10, 3: 1, 4: 2, 5: 1, 6: 2, 11: 1, 12: 1, 14: 1}
+
+Note: RN / overlap are *real* retrieval results; EN/EE/CER/AER from the
+offline backend use the documented compliance model (see mextra/agent.py).

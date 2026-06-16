@@ -1,0 +1,17 @@
+agent,scoring,instruction,metric,n=10,n=20,n=30,n=40,n=50
+ehragent,edit_distance,basic,EN,26,31,31,31,31
+ehragent,edit_distance,basic,RN,28,33,33,33,33
+ehragent,edit_distance,advanced,EN,25,36,49,61,62
+ehragent,edit_distance,advanced,RN,29,40,53,61,71
+ehragent,cosine,basic,EN,20,23,23,23,23
+ehragent,cosine,basic,RN,22,25,25,25,25
+ehragent,cosine,advanced,EN,24,32,49,54,60
+ehragent,cosine,advanced,RN,31,41,61,69,75
+rap,edit_distance,basic,EN,19,32,41,43,43
+rap,edit_distance,basic,RN,22,36,41,44,44
+rap,edit_distance,advanced,EN,19,35,41,50,61
+rap,edit_distance,advanced,RN,26,39,45,56,65
+rap,cosine,basic,EN,14,20,23,25,25
+rap,cosine,basic,RN,14,21,24,26,26
+rap,cosine,advanced,EN,25,49,73,96,118
+rap,cosine,advanced,RN,29,53,77,103,128
