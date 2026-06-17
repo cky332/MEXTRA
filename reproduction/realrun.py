@@ -337,8 +337,9 @@ class RealVictim:
         for attempt in range(4):
             try:
                 r = self._client.chat.completions.create(
-                    model=self.model, temperature=0, max_tokens=1500,
+                    model=self.model, temperature=0, max_tokens=1500, timeout=90,
                     messages=[{"role": "system", "content": sys}, {"role": "user", "content": user}])
+                import sys as _s; _s.stderr.write("."); _s.stderr.flush()
                 return r.choices[0].message.content or ""
             except Exception as e:
                 if attempt == 3:
