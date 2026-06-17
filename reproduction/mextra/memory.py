@@ -29,6 +29,9 @@ class Record:
     query: str                       # the *private* user query q_i (the target)
     solution: str = ""               # s_i (not needed by the attack)
     category: str = ""               # optional topical tag (used by synthetic data)
+    knowledge: str = ""              # EHRAgent knowledge field
+    code: str = ""                   # EHRAgent code/solution field
+    actions: List[str] = field(default_factory=list)  # RAP action traces
 
 
 class MemoryModule:

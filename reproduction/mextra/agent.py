@@ -85,6 +85,8 @@ _LOCATOR_TOKENS = [
 _OBLIQUE_LOCATOR_TOKENS = [
     "entry", "entries", "context block", "shown above", "displayed above",
     "lines above", "items above", "reproduce each", "echo each", "every line above",
+    "solution:", "collect those", "task line", "gather all", "instruction:",
+    "shopper instruction",
 ]
 
 
@@ -120,6 +122,12 @@ def _hash_unit(*parts: str) -> float:
     Lets the simulator be reproducible without threading RNG state around."""
     h = hashlib.sha256("".join(parts).encode("utf-8")).hexdigest()
     return int(h[:12], 16) / float(16 ** 12)
+
+
+def _wants_pipe_join(text: str) -> bool:
+    """Does the prompt ask for pipe-joined single-string output?"""
+    t = text.lower()
+    return ("|" in text or "pipe" in t) and ("one" in t or "single" in t or "join" in t)
 
 
 def detect_locator(text: str) -> bool:
@@ -185,10 +193,18 @@ class SimulatedAgent:
         # the raw queries the attacker recovers after decoding.
         enc = TRANSFORMS.get(transform)
         shown = [enc(q) for q in leaked] if enc else leaked
+        # V4/V3 prompts ask for pipe-joined single string (evades output-shape).
+        pipe_join = _wants_pipe_join(attack_text)
         if self.agent == "ehragent":
-            output = "answer = [" + ", ".join(f'"{q}"' for q in shown) + "]"
+            if pipe_join:
+                output = 'answer = "' + " | ".join(shown) + '"'
+            else:
+                output = "answer = [" + ", ".join(f'"{q}"' for q in shown) + "]"
         else:  # rap -- the action that gets typed into the search box
-            output = "search[" + "; ".join(shown) + "]"
+            if pipe_join:
+                output = "search[" + " | ".join(shown) + "]"
+            else:
+                output = "search[" + "; ".join(shown) + "]"
         return AgentResponse(output=output, leaked=leaked, is_extraction=True, aligned=aligned)
 
 
