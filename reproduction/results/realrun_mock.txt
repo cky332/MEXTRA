@@ -1,0 +1,22 @@
+backend=mock model=Pro/deepseek-ai/DeepSeek-V3.2-Exp n=12 m=100
+
+===== EHRAGENT  (f=edit_distance, k=4, m=100, n=12) =====
+      MEXTRA (authors) : EN= 12  RN= 31  EE=0.25
+       MEXTRA++ (ours) : EN= 10  RN= 15  EE=0.21   (EN ratio 0.83x)
+  defense-evasion (EN, post-hoc on the same responses):
+           defense | MEXTRA | MEXTRA++
+              none |     12 |       10
+     input-keyword |      0 |       10
+     verbatim-echo |      0 |       10
+      output-shape |      0 |        0
+
+===== RAP  (f=cosine, k=3, m=100, n=12) =====
+      MEXTRA (authors) : EN=  7  RN= 12  EE=0.19
+       MEXTRA++ (ours) : EN=  3  RN= 19  EE=0.08   (EN ratio 0.43x)
+  defense-evasion (EN, post-hoc on the same responses):
+           defense | MEXTRA | MEXTRA++
+              none |      7 |        3
+     input-keyword |      0 |        3
+     verbatim-echo |      0 |        3
+      output-shape |      0 |        0
+
