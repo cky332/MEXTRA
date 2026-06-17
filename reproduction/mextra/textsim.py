@@ -30,11 +30,20 @@ from collections import Counter
 from typing import Dict, List, Sequence
 
 
+try:
+    from Levenshtein import distance as _lev_c   # C-backed, ~100x faster
+except Exception:
+    _lev_c = None
+
+
 def levenshtein(a: str, b: str) -> int:
     """Exact Levenshtein (edit) distance between two strings.
 
-    Matches ``Levenshtein.distance`` from the original ``medagent.py``.
+    Matches ``Levenshtein.distance`` from the original ``medagent.py``. Uses the
+    C-backed ``python-Levenshtein`` when available, else the pure-Python fallback.
     """
+    if _lev_c is not None:
+        return _lev_c(a, b)
     if a == b:
         return 0
     la, lb = len(a), len(b)
