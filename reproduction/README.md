@@ -117,6 +117,27 @@ against a pre-registered criterion (`python improve.py` → **3/3 PASS**):
   i.e. content/keyword filtering is the wrong layer; output-shape and
   dynamic-memory are the robust defenses.
 
+### Real-LLM run on the actual EHRAgent / RAP victims (`realrun.py`)
+
+Runs MEXTRA (the authors' own generated prompts) vs MEXTRA++ against the *real*
+victims — real memory (`running/memory_split/*.json`), real edit-distance / cosine
+retrieval, the real EHRAgent code-gen / RAP ReAct prompts — and a real LLM. The
+extraction attack needs neither MIMIC-III nor a WebShop server (it makes the agent
+emit the retrieved queries; we score by the paper's substring match, decoding
+MEXTRA++'s encoding first). It also prints a **post-hoc defense-evasion table**
+(free — same responses). A `mock` backend validates the whole pipeline offline.
+
+```bash
+python realrun.py --backend mock --agent both          # offline pipeline check
+# real run (DeepSeek-V3.2 via SiliconFlow):
+export SILICONFLOW_API_KEY=sk-...                       # never commit this
+python realrun.py --backend siliconflow --agent both --n 12 --m 100
+```
+
+NB: the managed environment's **network egress allowlist must include
+`api.siliconflow.cn`** (otherwise the SDK returns "Host not in allowlist"). Set it
+where you created the environment (see the Claude-Code-on-the-web docs).
+
 No `pip install` needed (pure standard library). Python ≥ 3.8.
 
 ## Example output (offline backend)
