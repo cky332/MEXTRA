@@ -1,0 +1,5 @@
+stream,trip_after_prompts,needs_n
+MEXTRA basic,5,60
+MEXTRA advanced_cosine,4,60
+MEXTRA advanced_edit,14,60
+benign_sessions_false_trip,0,30

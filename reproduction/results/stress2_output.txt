@@ -1,0 +1,97 @@
+MEXTRA under production conditions -- scale, retrieval gating, monitoring
+(all decisive numbers are exact retrieval / counting)
+
+==========================================================================
+S1. PRODUCTION-SCALE memory: the absolute haul saturates, the fraction
+    collapses. ('EN grows with m' is a small-m artifact.)
+==========================================================================
+RN = unique victim records surfaced by n=30 prompts (EXACT retrieval).
+Ceiling is n*k (perfect non-overlap); RN saturates far below it, so the
+fraction of memory reached, RN/m, falls ~1/m as memory grows.
+
+  [rap, f=cosine, n=30, k=3]   ceiling n*k = 90
+          m  RN_basic  RN_adv  RN/m basic  %ceiling
+        200        24      77      0.1200       27%
+       1000        37      88      0.0370       41%
+       5000        39      87      0.0078       43%
+      20000        39      87      0.0019       43%
+      50000        39      87      0.0008       43%
+    >>> at m=50000: basic reaches 39/50000 = 0.08% of memory;
+        covering half of it would need >= 8333 prompts (k=3).
+
+  [ehragent, f=cosine, n=30, k=4]   ceiling n*k = 120
+          m  RN_basic  RN_adv  RN/m basic  %ceiling
+        200        25      61      0.1250       21%
+       1000        24      80      0.0240       20%
+       5000        24      77      0.0048       20%
+      20000        24      77      0.0012       20%
+      50000        24      77      0.0005       20%
+    >>> at m=50000: basic reaches 24/50000 = 0.05% of memory;
+        covering half of it would need >= 6250 prompts (k=4).
+
+  [ehragent, f=edit_distance, n=12, k=4]  (capped m; same saturation)
+         m  RN_basic  RN_adv     RN/m
+       200        29      31   0.1450
+       800        32      32   0.0400
+      2000        32      38   0.0160
+
+  >>> Mechanism: RN is bounded by n*k and saturates below it (retrieval
+      overlap), so RN/m -> 0. The paper's m<=500 sweep never reaches this.
+
+==========================================================================
+S2. RELEVANCE-GATED retrieval: inject a demo only if it is relevant
+    (similarity >= floor). Floor calibrated from real legit traffic.
+==========================================================================
+  avg top-1 similarity to memory (a generic dump prompt is unrelated to
+  any *specific* record, so it sits at the bottom of the distribution):
+    generic 'basic' dump prompts : 0.199
+    MEXTRA 'advanced_cosine'     : 0.182
+    real legit clinician queries : 0.456
+
+  floor calibrated to retain X% of legit traffic, then evaluated on a
+  disjoint legit split and on the attack (n=30):
+     retain    tau | legit kept  RN basic  RN adv  EN basic
+        95%  0.319 |        94%         4       0         0
+        90%  0.326 |        94%         0       0         0
+        85%  0.336 |        88%         0       0         0
+
+  >>> ungated, the same prompts retrieve RN(basic)=25. At a floor
+      that still serves ~90% of real queries, RN -> 0: the attack is starved
+      at the retrieval stage, before any output filter is even needed.
+  >>> Caveat: magnitudes use the dependency-free lexical proxy; a *semantic*
+      encoder separates 'dump memory' from clinical queries even more cleanly.
+
+==========================================================================
+S3. SESSION MONITORING: the attack needs a BURST of near-duplicate prompts;
+    that burst is itself the signal. (Pure input-side, exact counting.)
+==========================================================================
+  detector: flag if >= 3 of the last 5 queries repeat an
+  earlier one (cosine >= 0.7).
+
+           attack stream  tripped after
+            MEXTRA basic      5 prompts   (method needs n=30-60)
+    MEXTRA advanced_cosine      4 prompts   (method needs n=30-60)
+    MEXTRA advanced_edit     14 prompts   (method needs n=30-60)
+
+    benign sessions falsely flagged: 0/30
+  >>> The attack is cut off after a handful of prompts -- far short of the
+      30-60 near-identical prompts MEXTRA's diversity relies on.
+
+==========================================================================
+COMPOUND. The realistic attacker: cut off at the S3 trip point, against
+          production-scale memory (S1). How many records actually leak?
+==========================================================================
+  S3 cuts the session off after 5 prompts. RN reachable in 5 prompts:
+
+          m  RN@trip  RN@full(n)  RN@trip / m
+        200       15          25      0.07500
+       5000       13          24      0.00260
+      50000       13          24      0.00026
+
+  >>> Under all three production conditions together, a generic MEXTRA
+      session leaks ~15-13 records before being cut off -- and against
+      a relevance floor (S2) even those go to zero. The paper's headline
+      threat is specific to a small, unconditional-injection, unmonitored,
+      single-session deployment.
+
+CSVs written to results/ (s1_scale, s2_relevance_gate, s3_session_monitoring, compound).

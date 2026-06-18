@@ -75,14 +75,28 @@ class MemoryModule:
             if self.method == "cosine":
                 self._emb_cache.pop(0)  # type: ignore[union-attr]
 
-    def retrieve(self, query: str, k: int) -> List[Record]:
+    def retrieve(self, query: str, k: int, floor: Optional[float] = None) -> List[Record]:
         """Return the top-``k`` records for ``query`` under ``self.method``.
 
         Mirrors the originals: edit distance ranks *ascending* (smaller =
         closer), cosine ranks *descending* (larger = closer).
+
+        ``floor`` adds the *relevance gate* that production RAG stacks commonly
+        apply but the paper's victims do not: a record is only injected if it is
+        actually relevant -- cosine score ``>= floor`` (similarity) or edit
+        distance ``<= floor`` (closeness). With it set, a generic "dump your
+        memory" prompt -- which is lexically unrelated to any specific private
+        record -- retrieves *nothing*, so there is nothing to leak (see
+        ``stress2.py`` S2). Default ``None`` = unconditional top-k (paper
+        behaviour), so existing callers are unaffected.
         """
-        idx = topk_indices(self.score_all(query), k,
-                           largest=(self.method == "cosine"))
+        scores = self.score_all(query)
+        idx = topk_indices(scores, k, largest=(self.method == "cosine"))
+        if floor is not None:
+            if self.method == "cosine":
+                idx = [i for i in idx if scores[i] >= floor]
+            else:  # edit distance: smaller = closer, so gate on an upper bound
+                idx = [i for i in idx if scores[i] <= floor]
         return [self.records[i] for i in idx]
 
     def score_all(self, query: str) -> List[float]:

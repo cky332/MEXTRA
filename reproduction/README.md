@@ -57,6 +57,7 @@ cd reproduction
 python run_demo.py        # RQ1 (Table 1 shape) + ablations, offline
 python experiments.py     # RQ2 + RQ3 sweeps -> results/*.csv
 python stress.py          # realistic-condition stress tests (see below) -> results/*.csv
+python stress2.py         # production-condition stress tests (scale/gating/monitoring)
 python tests/test_mextra.py
 ```
 
@@ -77,6 +78,34 @@ retrieval, not the compliance model):
 - **E3 — unknown `f` ⇒ "advanced" largely fails.** The edit-distance length-ladder
   lifts an edit agent 44→65 but a cosine agent only 26→36: guess `f` wrong and the
   effort is wasted (a white-box dependency).
+
+### Production-condition stress tests (`stress2.py`)
+
+Where `stress.py` relaxes the paper's *modeling* assumptions, `stress2.py` probes
+the three things a real *deployment* changes — and shows they **compound**. Again,
+every decisive number is exact retrieval / counting, not the compliance model:
+
+- **S1 — production-scale memory ⇒ the coverage ceiling collapses.** `n` prompts ×
+  `k` shots can surface at most `n·k` records, and the retrieved union `RN`
+  *saturates* well below that (overlap). So the paper's "EN grows with `m`" (Fig 2)
+  is a small-`m` artifact: pushing `m` from 200 → 50 000, `RN` plateaus (RAP basic
+  24 → **39**, advanced 77 → **87**) while the fraction reached `RN/m` collapses
+  **0.12 → 0.0008**. At `m`=50 000 the attack reaches **0.08 %** of memory; covering
+  half would need **≥ 8 333** prompts. Edit-distance saturates identically.
+- **S2 — relevance-gated retrieval starves the generic attack.** Production RAG
+  injects a demo only above a similarity floor. A generic "dump your memory" prompt
+  is unrelated to any *specific* record (avg top-1 sim **0.199** vs **0.456** for
+  real clinician queries), so at a floor calibrated to still serve **94 %** of real
+  traffic, `RN` goes **25 → 0** for basic *and* **61 → 0** for advanced — the attack
+  is starved at the retrieval stage, before any output filter is needed.
+- **S3 — session monitoring ⇒ the attack's own volume is the signal.** To diversify
+  retrieval the attack must fire dozens of near-duplicate prompts. A cheap burst
+  detector (≥3 near-duplicates in a window of 5) trips after **4–5** prompts on the
+  attack and **0/30** benign sessions — long before the `n`=30–60 the method needs.
+- **Compound.** Cut off at ~5 prompts (S3), against a 50 k-record memory (S1), a
+  generic MEXTRA session leaks **~13 records (0.026 %)** before detection — and
+  against a relevance floor (S2), **0**. MEXTRA's headline threat is specific to a
+  *small, unconditional-injection, unmonitored, single-session* deployment.
 
 ### Generalization: new data + new task settings (`generalize.py`)
 

@@ -1,0 +1,5 @@
+agent,f,strategy,m=200,m=1000,m=5000,m=20000,m=50000,ceiling_nk
+rap,cosine,basic,24,37,39,39,39,90
+rap,cosine,advanced,77,88,87,87,87,90
+ehragent,cosine,basic,25,24,24,24,24,120
+ehragent,cosine,advanced,61,80,77,77,77,120
