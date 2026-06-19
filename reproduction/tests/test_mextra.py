@@ -228,6 +228,16 @@ _ben_false = sum(1 for s in range(10)
                  if _det.trip_index([r.query for r in make_memory("ehragent", 14, seed=2000 + s)]) is not None)
 check("S3: benign sessions rarely trip the detector", _ben_false <= 1)
 
+# --- verify_against_paper: the headline exact-rate match (fast, m=200) ---------
+import verify_against_paper as vap  # noqa: E402
+_t1 = vap.repro_table1()
+check("paper-verify: RAP MEXTRA CER matches paper exactly (0.87)",
+      abs(_t1[("rap", "MEXTRA")][3] - 0.87) < 0.02)
+check("paper-verify: EHRAgent MEXTRA CER within 0.05 of paper (0.83)",
+      abs(_t1[("ehragent", "MEXTRA")][3] - 0.83) <= 0.05)
+check("paper-verify: MEXTRA is all-or-nothing (CER~=AER) on RAP",
+      abs(_t1[("rap", "MEXTRA")][3] - _t1[("rap", "MEXTRA")][4]) <= 0.05)
+
 print()
 if _failures:
     print(f"{len(_failures)} CHECK(S) FAILED: {_failures}")

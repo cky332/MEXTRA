@@ -58,6 +58,7 @@ python run_demo.py        # RQ1 (Table 1 shape) + ablations, offline
 python experiments.py     # RQ2 + RQ3 sweeps -> results/*.csv
 python stress.py          # realistic-condition stress tests (see below) -> results/*.csv
 python stress2.py         # production-condition stress tests (scale/gating/monitoring)
+python verify_against_paper.py   # side-by-side vs the paper's Tables 1/2/3 (+PASS/FAIL)
 python tests/test_mextra.py
 ```
 
@@ -169,6 +170,33 @@ where you created the environment (see the Claude-Code-on-the-web docs).
 
 No `pip install` needed (pure standard library). Python ≥ 3.8.
 
+## Verifying against the paper (`verify_against_paper.py`)
+
+`verify_against_paper.py` hard-codes the paper's reported numbers
+(arXiv:2502.13172v2 — **Table 1** EN/RN/EE/CER/AER, **Table 2** EN across
+`f`/embedding/`m`, **Table 3** LLM backbones, **Fig 4** `n`-sweep) and prints a
+side-by-side with this reproduction, then PASS/FAILs each of the paper's
+qualitative findings. Current status: **10/10 structural checks PASS**. The honest
+split it makes explicit:
+
+| What | Paper | Offline repro | Verdict |
+|---|---|---|---|
+| RAP MEXTRA CER / AER | 0.87 / 0.90 | **0.87** / 0.87 | rate matched (CER exact) |
+| EHRAgent MEXTRA CER / AER | 0.83 / 0.83 | 0.80 / 0.80 | rate matched (≤0.03) |
+| `CER≈AER` all-or-nothing | yes | yes | ✓ |
+| edit > cosine at every `m` (Table 2) | yes | yes | ✓ |
+| EN/RN grow with `m`, `k`, `n` | yes | yes | ✓ |
+| advanced lifts RN, most for cosine | 2.4× vs 1.36× | 4.9× vs 1.48× | ✓ direction |
+| **EHRAgent MEXTRA EN / RN (counts)** | **50 / 55** | **31 / 33** | undershoots (by design) |
+| RAP MEXTRA EN / RN (counts) | 26 / 27 | 23 / 24 | close |
+
+**Bottom line: the *method*, every *trend*, and the *rates* (CER/AER) reproduce;
+the *absolute EN/EE counts* are lower** because the offline templater is less
+diverse than GPT-4o and the memory/embeddings are synthetic. Reproducing the
+paper's absolute counts requires the real victim (`realrun.py --backend ...` with
+GPT-4o/DeepSeek on real MIMIC-III / WebShop memory) — they cannot come from an
+offline, data-free run.
+
 ## Example output (offline backend)
 
 ```
@@ -176,14 +204,22 @@ No `pip install` needed (pure standard library). Python ≥ 3.8.
 MEXTRA                     EN= 31  RN= 33  EE=0.26  CER=0.80  AER=0.80
   w/o aligner              EN= 11  RN= 16  EE=0.09  CER=0.50  AER=0.67
 === RAP  (f=cosine, k=3, n=30, m=200) ===
-MEXTRA                     EN= 29  RN= 30  EE=0.32  CER=0.87  AER=0.87
-  w/o aligner              EN=  9  RN= 18  EE=0.10  CER=0.17  AER=0.67
+MEXTRA                     EN= 23  RN= 24  EE=0.26  CER=0.87  AER=0.87
+  w/o aligner              EN= 10  RN= 18  EE=0.11  CER=0.50  AER=0.67
 ```
 
-Compare to paper Table 1 (EHRAgent CER/AER 0.83/0.83; RAP 0.87/0.90; the RAP
-w/o-aligner CER 0.17 is reproduced exactly). The `EN` magnitudes are lower than
-the paper's 50/26 because the offline templater's `basic` prompts retrieve a
-less diverse set than GPT-4's; the *gap structure* is what's faithful.
+Compare to paper Table 1 (EHRAgent CER/AER 0.83/0.83; RAP 0.87/0.90). The
+**rates** track the paper closely — RAP MEXTRA `CER=0.87` is matched exactly, and
+`CER≈AER` (all-or-nothing) holds for both agents — but the **absolute EN/EE
+counts are lower** than the paper's 50/26, because the offline templater's
+`basic` prompts retrieve a less diverse set than GPT-4o's and the memory /
+embeddings are synthetic stand-ins. Some absolute *compliance* cells therefore
+differ (e.g. the paper's RAP w/o-aligner `CER=0.17` is a strict-format failure of
+the **real** victim; the offline compliance model gives `0.50` — the structural
+point, that dropping the aligner collapses RAP's CER, still holds). Run
+`python verify_against_paper.py` for the full side-by-side with PASS/FAIL on every
+structural claim, or `python realrun.py --backend ...` for the real victim's
+absolute numbers.
 
 See [`../笔记_MEXTRA.md`](../笔记_MEXTRA.md) for the full code-grounded review
 (核心优缺点).
