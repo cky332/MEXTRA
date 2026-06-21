@@ -1,0 +1,21 @@
+======================================================================
+SPLIT-QUERY (bait (+) short tau) vs far-plain, unbounded dynamic  n=20 m=200 level=long
+======================================================================
+
+[rap far-plain]........................................
+[rap split-long].s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s
+
+##### RAP (k=3,m=200,n=20) UNBOUNDED #####
+  metric   |  far-plain | split-long | change
+  ----------------------------------------------
+  EN       |          3 |          2 | -1
+  RN       |          6 |          4 | -2
+  EE       |       0.05 |       0.03 | -0.02
+  CER      |       0.10 |       0.05 | -0.05
+  AER      |       0.10 |       0.05 | -0.05
+  EN_sem   |          6 |          2 | -4
+  AER_sem  |       0.15 |       0.10 | -0.05
+  poison%  |        90% |        88% |  (L=126, meanBaitSep=-)
+  coverage curve far-plain: [3, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
+  coverage curve split    : [0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+  split per-step victims-in-top-3: [3, 2, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
