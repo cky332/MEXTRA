@@ -1,0 +1,17 @@
+======================================================================
+L-SWEEP (EHRAgent, unbounded dynamic, n=30, m=200): does poison% rise with L?
+======================================================================
+
+[tiny].s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s
+[short].s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s
+[med].s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s
+[long].s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s.s
+  level  |    L |  EN |  RN | poison% | meanBaitSep
+  --------------------------------------------------------
+  tiny   |   32 |   0 |   9 |     92% | 13
+  short  |   50 |   0 |  10 |     92% | 13
+  med    |   73 |   7 |  10 |     92% | 24
+  long   |  139 |   9 |   9 |     90% | 41
+
+  theory: victim beats decoy  <=>  eps+L < edit(b_t,b_s)=meanBaitSep
+  => poison%% should INCREASE with L; EN should DECREASE with L.
